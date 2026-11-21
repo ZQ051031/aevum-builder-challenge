@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#092921">
+  <title>Aevum Pay · Stablecoin invoices</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">{"imports":{"ethers":"./vendor/ethers.min.js"}}</script>
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <div class="topbar">
+        <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>Aevum Pay</a>
+        <div class="connection">
+          <span id="account" class="account" hidden></span>
+          <button class="wallet" id="connect" type="button">Connect wallet</button>
+          <div class="demo-roles" id="demo-roles" hidden aria-label="Local demo identity">
+            <button class="wallet" id="role-merchant" type="button" aria-pressed="false">Merchant</button>
+            <button class="wallet" id="role-payer" type="button" aria-pressed="false">Payer</button>
+          </div>
+        </div>
+      </div>
+      <div class="intro">
+        <div>
+          <div class="network"><span></span><span id="network">QDay Aevum · Testnet</span></div>
+          <h1>Stablecoin invoices.</h1>
+          <p>Create a payment link, approve the exact amount, and confirm settlement on-chain.</p>
+        </div>
+        <dl class="chain">
+          <div><dt>Chain ID</dt><dd id="chain-id">44005</dd></div>
+          <div><dt>Payment token</dt><dd><a id="token-link">tUSD8</a></dd></div>
+          <div><dt>Invoice contract</dt><dd><a id="contract-link">Awaiting address</a></dd></div>
+        </dl>
+      </div>
+    </div>
+  </header>
+  <main class="wrap">
+    <form id="deployment-form" class="setup" hidden>
+      <div>
+        <h2>Connect to a deployment</h2>
+        <p>Use your verified Aevum Pay contract address or open a shared invoice link.</p>
+      </div>
+      <div class="deployment-control">
+        <label class="visually-hidden" for="deployment">Aevum Pay contract address</label>
+        <input id="deployment" name="deployment" placeholder="0x…" required spellcheck="false" autocomplete="off">
+        <button type="submit" class="secondary">Load contract</button>
+      </div>
+    </form>
+    <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="merchant-title">
+        <h2 id="merchant-title">Create a request</h2>
+        <p>Set the terms and share the invoice link with your payer.</p>
+        <form id="create-form">
+          <label for="payee">Payee address</label>
+          <input id="payee" name="payee" placeholder="0x…" required spellcheck="false" autocomplete="off">
+          <div class="field-row">
+            <div>
+              <label for="amount">Amount <span>tUSD8</span></label>
+              <input id="amount" name="amount" inputmode="decimal" maxlength="18" placeholder="1.25" required aria-describedby="amount-note">
+              <small id="amount-note">Up to 1,000 tUSD8.</small>
+            </div>
+            <div>
+              <label for="minutes">Expires after</label>
+              <select id="minutes" name="minutes">
+                <option value="5">5 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="1440">1 day</option>
+                <option value="10080">1 week</option>
+              </select>
+            </div>
+          </div>
+          <label for="memo">Memo <span>optional</span></label>
+          <input id="memo" name="memo" placeholder="Order A-1042" maxlength="160" aria-describedby="memo-note">
+          <small id="memo-note">Public on-chain. Use a reference without personal details.</small>
+          <button class="primary" id="create" type="submit" disabled>Create invoice</button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="payer-title">
+        <h2 id="payer-title">Find and pay an invoice</h2>
+        <p>Check the payee, amount, and expiry before approving.</p>
+        <form class="lookup" id="lookup-form">
+          <label class="visually-hidden" for="invoice-id">Invoice ID</label>
+          <input id="invoice-id" placeholder="Invoice ID" required inputmode="numeric" maxlength="78">
+          <button class="secondary" id="lookup" type="submit" disabled>Look up</button>
+        </form>
+        <div id="invoice-empty" class="empty">Look up an invoice or open a payment link to see its details.</div>
+        <div id="invoice" class="invoice" hidden>
+          <div class="invoice-top">
+            <div><span id="invoice-number" class="eyebrow"></span><div id="invoice-amount" class="invoice-amount"></div></div>
+            <span id="invoice-status" class="badge" aria-live="polite"></span>
+          </div>
+          <dl class="invoice-details">
+            <div><dt>Payee</dt><dd id="invoice-payee"></dd></div>
+            <div><dt>Merchant</dt><dd id="invoice-merchant"></dd></div>
+            <div><dt>Expires</dt><dd id="invoice-expiry"></dd></div>
+            <div><dt>Memo</dt><dd id="invoice-memo"></dd></div>
+            <div id="payer-row" hidden><dt>Paid by</dt><dd id="invoice-payer"></dd></div>
+          </dl>
+          <div class="invoice-actions">
+            <button class="primary" id="approve" type="button" hidden>Approve exact amount</button>
+            <button class="primary" id="pay" type="button" hidden>Pay invoice</button>
+            <button class="secondary" id="share" type="button">Copy link</button>
+            <button class="secondary" id="cancel" type="button" hidden>Cancel invoice</button>
+          </div>
+        </div>
+        <div id="allowance-panel" class="allowance" hidden>
+          <span id="allowance"></span>
+          <button class="text-button" id="revoke" type="button">Revoke allowance</button>
+        </div>
+      </section>
+    </div>
+    <section class="activity" id="activity" hidden aria-labelledby="activity-title">
+      <h2 id="activity-title">Transaction activity</h2>
+      <ul id="transactions"></ul>
+    </section>
+    <footer>
+      <span id="environment-note">Aevum testnet only · Gas uses tQDAY</span>
+      <a id="faucet" href="https://faucet.qday.info/en" target="_blank" rel="noopener noreferrer">Get test tokens ↗</a>
+    </footer>
+  </main>
+</body>
+</html>

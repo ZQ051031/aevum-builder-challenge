@@ -1,0 +1,20 @@
+{
+  "name": "aevum-pay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "postinstall": "node scripts/prepare-web.mjs",
+    "start": "node scripts/serve.mjs",
+    "demo": "node scripts/local-demo.mjs",
+    "demo:web": "node scripts/local-demo.mjs --serve",
+    "demo:testnet": "node scripts/testnet-demo.mjs"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "ethers": "6.17.0"
+  }
+}

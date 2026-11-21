@@ -1,0 +1,9 @@
+.git
+node_modules
+web/vendor
+out
+cache
+broadcast
+.env*
+*.pem
+*.key

@@ -1,0 +1,9 @@
+services:
+  aevum-pay:
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+    init: true
+    ports:
+      - "127.0.0.1:8080:8080"
